@@ -14,12 +14,15 @@
 module delay_tb;
 
 
-localparam Tclk = 10;
+localparam Tclk = 20;
 
+//=============================================================================
+// Clock
 logic clk = 0;
 always #(Tclk/2) clk <= !clk;
 
-
+//=============================================================================
+// Reset
 logic reset_n=1;
 initial begin
 	reset_n <= 1;
@@ -29,20 +32,45 @@ initial begin
 	reset_n <= 1;
 end
 
-
+//=============================================================================
+// Module
 parameter SIG_BITS	= 16;
-parameter BLEND_B	= 10;	
+parameter BLEND_B	= 4;	
 parameter DLY_B		= 14;
 parameter FDB_B		= 10;
 
-wire [SIG_BITS-1:0]	in;
+logic [SIG_BITS-1:0]	in;
 //------------ Output -------------------
-wire [SIG_BITS-1:0]	out;;
+wire [SIG_BITS-1:0]	out;
 //------------ Control ------------------
-wire [BLEND_B-1:0]	blend;
-wire [DLY_B-1:0]	delay;
-wire [FDB_B-1:0]	feedbk;
+logic [BLEND_B-1:0]	blend;
+logic [DLY_B-1:0]	delay;
+logic [FDB_B-1:0]	feedbk;
 
-delay delay_inst ( .* );
+delay #( 
+	.BLEND_B(BLEND_B)
+) delay_inst ( .* );
+
+//=============================================================================
+// Test procedure
+initial begin
+	$display("=======================================");
+	$display("=     delay module test procedure     =");
+	$display("=======================================");
+
+	wait(reset_n == 0);
+	$display("%t: Going into reset", $time());
+
+	wait(reset_n == 1);
+	$display("%t: Going out of reset", $time());
+
+	delay = 1000;
+	#(25ms);
+	
+	delay = 500;
+	#(10ms);
+
+
+end
 
 endmodule
