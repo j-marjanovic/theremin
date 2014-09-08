@@ -47,6 +47,14 @@ wire [A_BITS-1:0]	a5;
 wire [A_BITS-1:0]	a4;
 wire [TONE_BITS-1:0] tone_out;
 
+parameter SIG_BITS	= 16;
+parameter BLEND_B	= 4;	
+parameter DLY_B		= 14;
+parameter FDB_B		= 10;
+wire [SIG_BITS-1:0]	delay_out;
+logic [BLEND_B-1:0]	blend;		// Delay controls
+logic [DLY_B-1:0]	delay;
+logic [FDB_B-1:0]	feedbk;
 
 //=========================================================
 // PLL 100 MHz
@@ -100,6 +108,22 @@ tone_gen # (
 	//------------ Output control ------------------
 	.out		( tone_out )
 );
+
+//=========================================================
+// Delay
+delay #( 
+	.SIG_BITS	( SIG_BITS 	),
+	.BLEND_B	( BLEND_B	),
+	.DLY_B		( DLY_B		),
+	.FDB_B		( FDB_B		)
+) delay_inst ( 	
+	.in		( tone_out	),
+	.out	( delay_out	),
+	.blend,
+	.delay,
+	.feedbk,
+);
+
 
 
 
