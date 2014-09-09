@@ -56,6 +56,15 @@ logic [BLEND_B-1:0]	blend;		// Delay controls
 logic [DLY_B-1:0]	delay;
 logic [FDB_B-1:0]	feedbk;
 
+wire [7:0] actrls_a16;
+wire [7:0] actrls_a8;
+wire [7:0] actrls_a5;
+wire [7:0] actrls_a4;
+wire [7:0] actrls_blend;
+wire [7:0] actrls_delay;
+wire [7:0] actrls_feedbk;
+wire [7:0] actrls_gain;
+
 //=========================================================
 // PLL 100 MHz
 pll_100	pll_100_inst (
@@ -124,7 +133,30 @@ delay #(
 	.feedbk,
 );
 
-
+//=========================================================
+// Delay
+a_ctrls # (
+	.BITS(8)
+) a_ctrls_inst(
+	//------------ Clk and reset ------------
+	.clk		( clk_50	),
+	.reset_n,
+	//------------ Input --------------------
+	.CTRL_SCLK,
+	.CTRL_MOSI,
+	.CTRL_SS_n,
+	//------------ Tone Control -------------
+	.a16		( actrls_a16 	),
+	.a8			( actrls_a8 	),
+	.a5			( actrls_a5 	),
+	.a4			( actrls_a4 	),
+	//------------ Delay Control ------------
+	.blend		( actrls_blend 	),
+	.delay		( actrls_delay 	),
+	.feedbk		( actrls_feedbk ),
+	//------------ Gain Control -------------
+	.gain		( actrls_gain 	)
+);
 
 
 endmodule
