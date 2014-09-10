@@ -36,25 +36,26 @@ wire clk_50 = CLK_50;
 wire reset_n = EXT_RESET_n;
 
 localparam TC_BITS = 12; 		// output from time constant
-wire [TC_BITS-1:0] 	tc_data;
+(* keep = 1 *) wire [TC_BITS-1:0] 	tc_data;
 wire				tc_valid;
 
 localparam	A_BITS 	= 3; 		// Hammond registers
 localparam	TONE_BITS = 16;
-wire [A_BITS-1:0]	a16;
-wire [A_BITS-1:0]	a8;
-wire [A_BITS-1:0]	a5;
-wire [A_BITS-1:0]	a4;
-wire [TONE_BITS-1:0] tone_out;
+(* keep = 1 *) wire [A_BITS-1:0]	a16;
+(* keep = 1 *) wire [A_BITS-1:0]	a8;
+(* keep = 1 *) wire [A_BITS-1:0]	a5;
+(* keep = 1 *) wire [A_BITS-1:0]	a4;
+(* keep = 1 *) wire [TONE_BITS-1:0] tone_out;
 
 parameter SIG_BITS	= 16;
 parameter BLEND_B	= 4;	
 parameter DLY_B		= 14;
 parameter FDB_B		= 10;
 wire [SIG_BITS-1:0]	delay_out;
-logic [BLEND_B-1:0]	blend;		// Delay controls
-logic [DLY_B-1:0]	delay;
-logic [FDB_B-1:0]	feedbk;
+wire delay_valid;
+(* keep = 1 *) logic [BLEND_B-1:0]	blend;		// Delay controls
+(* keep = 1 *) logic [DLY_B-1:0]	delay;
+(* keep = 1 *) logic [FDB_B-1:0]	feedbk;
 
 wire [7:0] actrls_a16;
 wire [7:0] actrls_a8;
@@ -126,15 +127,37 @@ delay #(
 	.DLY_B		( DLY_B		),
 	.FDB_B		( FDB_B		)
 ) delay_inst ( 	
-	.in		( tone_out	),
-	.out	( delay_out	),
+	.clk	( clk_50		),
+	.reset_n,
+	.in		( tone_out		),
+	.valid	( delay_valid	),
+	.out	( delay_out		),
 	.blend,
 	.delay,
 	.feedbk,
 );
 
 //=========================================================
-// Delay
+// Output
+AD5660_SPI # (
+	.BITS	( 24			),
+	.fCLK	( 50_000_000	),
+	.fSCLK	( 10_000_000	)
+) AD5660_SPI_inst(
+	.clk	( clk_50 ),
+	.reset_n,
+	//------------ Input --------------------
+	.in		( delay_out 	),
+	.go		( delay_valid	),
+	//------------ Output -------------------
+	.SS_n	( DAC_SYNC		),
+	.SCLK	( DAC_SCLK		),	
+	.SDO	( DAC_DATAI		)
+);
+
+	
+//=========================================================
+// Analog controls
 a_ctrls # (
 	.BITS(8)
 ) a_ctrls_inst(

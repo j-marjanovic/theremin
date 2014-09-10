@@ -40,6 +40,7 @@ module delay # (
 	input		[SIG_BITS-1:0]	in,
 	//------------ Output -------------------
 	output logic [SIG_BITS-1:0]	out,
+	output 						valid,
 	//------------ Control ------------------
 	input		[BLEND_B-1:0]	blend,
 	input		[DLY_B-1:0]		delay,
@@ -53,6 +54,8 @@ module delay # (
 logic smp_en;
 localparam SAMPLE_CNTR_MAX = fCLK/fSAMP - 1;
 logic [$clog2(SAMPLE_CNTR_MAX):0] sample_cntr;
+
+assign valid = smp_en;
 
 always_ff @ (posedge clk, negedge reset_n) begin
 	if( !reset_n ) begin

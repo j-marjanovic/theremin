@@ -43,10 +43,10 @@ logic [CNTR_BITS-1:0] 		cntr;
 logic [$clog2(BITS-1)-1:0] 	bits_cntr;
 logic [BITS-1:0]			data_tmp;
 
-function put_bit;
+task put_bit;
 	data_tmp	<= {data_tmp[BITS-2:0],1'b0};
 	SDO			<= data_tmp[BITS-1];
-endfunction
+endtask
 
 always_ff @ (posedge clk, negedge reset_n) begin
 	if( !reset_n ) begin
