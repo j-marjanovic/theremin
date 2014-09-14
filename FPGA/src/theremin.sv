@@ -35,12 +35,13 @@ wire clk_100;
 wire clk_50 = CLK_50;
 wire reset_n = EXT_RESET_n;
 
-localparam TC_BITS = 12; 		// output from time constant
+localparam TC_BITS = 16; 		// output from time constant
 (* keep = 1 *) wire [TC_BITS-1:0] 	tc_data;
 wire				tc_valid;
 
 localparam	A_BITS 	= 3; 		// Hammond registers
 localparam	TONE_BITS = 16;
+wire [TC_BITS-1:0] freq;
 (* keep = 1 *) wire [A_BITS-1:0]	a16;
 (* keep = 1 *) wire [A_BITS-1:0]	a8;
 (* keep = 1 *) wire [A_BITS-1:0]	a5;
@@ -99,6 +100,29 @@ tc_meas # (
 );
 
 //=========================================================
+// Tc to Freq converter
+f_compressor  #   (
+	.F_IN_1			( 1200 			),
+	.F_OUT_1		( 10 			),
+	
+	.F_IN_2			( 2000 			),
+	.F_OUT_2 		( 100  			),
+	
+	.F_IN_3			( 2500 			),
+	.F_OUT_3		( 1250 			)
+)f_compressor_inst (
+	//------------ Clock and reset -----------------
+	.clk			( clk_50 		),
+	.reset_n		( reset_n 		),
+	//------------ Input data ----------------------
+	.in				( tc_data[15:2] ),
+	.go				( 1 			),
+	//------------ Output data ---------------------
+	.out			( freq 			),
+	.done			(  				)
+);
+
+//=========================================================
 // Tone generator
 tone_gen # (
 	.F_BITS		( TC_BITS ),
@@ -109,7 +133,7 @@ tone_gen # (
 	.clk		( clk_50 ),
 	.reset_n,
 	//------------ Input --------------------
-	.freq		( tc_data ),
+	.freq		( freq ),
 	//------------ Tone Control -------------
 	.a16,
 	.a8,

@@ -55,6 +55,7 @@ set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_RO
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name VERILOG_FILE src/f_compressor.v
 set_global_assignment -name SYSTEMVERILOG_FILE src/AD5660_SPI.sv
 set_global_assignment -name QIP_FILE delay_mem/delay_mem.qip
 set_global_assignment -name SYSTEMVERILOG_FILE src/mixer.sv
@@ -65,4 +66,5 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/tc_meas.sv
 set_global_assignment -name QIP_FILE pll/pll_100.qip
 set_global_assignment -name SYSTEMVERILOG_FILE src/tone_gen.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/a_ctrls.sv
+set_global_assignment -name SDC_FILE constr/clocks.sdc
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
