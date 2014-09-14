@@ -18,8 +18,9 @@
 /* User Global Variable Declaration                                           */
 /******************************************************************************/
 
-uint8_t ADCvalue;
-uint8_t i = 'a';
+uint8_t ADCvalue[ADC_CHNS];
+char str[64];
+
 
 /******************************************************************************/
 /* Main Program                                                               */
@@ -38,8 +39,10 @@ void main(void)
     {
 
         //ADCvalue  = ADC_Read(1);
-        UART_Send(i++);
-
+        //UART_Send(i++);
+        //UART_Send_String("Jan je car!!\r\n");
+        createMeasString(str, ADCvalue);
+        UART_Send_String(str);
 
         __delay_ms(10); //Delay
     }

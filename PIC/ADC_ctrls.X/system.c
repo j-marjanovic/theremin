@@ -24,3 +24,31 @@ void ConfigureOscillator(void)
     IRCF2 = 1; IRCF1 = 1; IRCF0 = 0; // 4MHz
 
 }
+
+
+/// Initalizes to 9600 bps
+void UART_Init()
+{
+    TRISB5 = 1;
+    TRISB2 = 1;
+    SPBRG = 25;
+    SPEN = 1;
+    BRGH = 1;
+    TXEN = 1;
+}
+
+/// Sends single character
+void UART_Send(char ch)
+{
+    while(!TRMT);
+    TXREG = ch;
+}
+
+/// Sends string
+void UART_Send_String(char *str)
+{
+    while(*str!='\0'){
+        UART_Send(*str);
+        *str++;
+    }
+}

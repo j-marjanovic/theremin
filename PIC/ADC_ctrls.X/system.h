@@ -17,3 +17,13 @@ functions, and other non-peripheral microcontroller initialization functions
 go here. */
 
 void ConfigureOscillator(void); /* Handles clock switching/osc initialization */
+
+
+/// Initalizes to 9600 bps
+void UART_Init();
+
+/// Sends single character
+void UART_Send(char ch);
+
+/// Sends string
+void UART_Send_String(char *str);

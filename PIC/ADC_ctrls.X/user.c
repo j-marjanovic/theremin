@@ -10,8 +10,11 @@
 
 #include <stdint.h>         /* For uint8_t definition */
 #include <stdbool.h>        /* For true/false definition */
+#include <string.h>
+#include <stdio.h>
 
 #include "user.h"
+#include "system.h"
 
 /******************************************************************************/
 /* User Functions                                                             */
@@ -53,17 +56,21 @@ uint8_t ADC_Read(unsigned char channel)
 }
 
 
-void UART_Init()
+uint8_t createMeasString(char* str, uint8_t meas[ADC_CHNS])
 {
-    TRISB5 = 1;
-    TRISB2 = 1;
-    SPBRG = 25;
-    SPEN = 1;
-    BRGH = 1;
-    TXEN = 1;
-}
+   uint8_t i;
+   uint8_t offset = 0;
+   
+   memcpy(str, "MEAS:", strlen("MEAS:"));
+   offset += strlen("MEAS:");
 
-void UART_Send(char ch)
-{
-    TXREG = ch;
+   for(i = 0; i < ADC_CHNS; i++){
+
+       offset += sprintf(str+offset, "%02x:", meas[i]);
+   }
+
+   memcpy(str+offset, "\r\n", strlen("\r\n"));
+   offset += strlen("\r\n");
+
+   return offset;
 }
