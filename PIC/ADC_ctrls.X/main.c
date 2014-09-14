@@ -37,10 +37,7 @@ void main(void)
 
     while(1)
     {
-
-        //ADCvalue  = ADC_Read(1);
-        //UART_Send(i++);
-        //UART_Send_String("Jan je car!!\r\n");
+        doMeas(ADCvalue);
         createMeasString(str, ADCvalue);
         UART_Send_String(str);
 

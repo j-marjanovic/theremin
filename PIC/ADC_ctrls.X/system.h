@@ -19,6 +19,21 @@ go here. */
 void ConfigureOscillator(void); /* Handles clock switching/osc initialization */
 
 
+/******************************************************************************/
+/* Analog to Digital Converter                                                */
+/******************************************************************************/
+
+/// initializes ADC
+void ADC_Init();
+
+/// Reads from ADC
+uint8_t ADC_Read(unsigned char channel);
+
+
+/******************************************************************************/
+/* Universal Asynchronous Receiver/Transmitter                                */
+/******************************************************************************/
+
 /// Initalizes to 9600 bps
 void UART_Init();
 

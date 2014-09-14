@@ -11,9 +11,8 @@
 
 void InitApp(void);         /* I/O and Peripheral Initialization */
 
-void ADC_Init();
-uint8_t ADC_Read(unsigned char channel);
-
+/// Performs measuerment from ADCs
+void doMeas(uint8_t meas[ADC_CHNS]);
 
 // Creates meausrement string
 uint8_t createMeasString(char* str, uint8_t meas[ADC_CHNS]);

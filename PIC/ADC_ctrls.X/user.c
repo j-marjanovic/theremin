@@ -25,34 +25,19 @@
 
 void InitApp(void)
 {
-    //TRISA = 0xFF;   // PORTA input
-    //ANSEL = 0x7F;   // Analog inputs on PORTA0-6
-
     // ADC
-    //ADC_Init();
+    ADC_Init();
 
+    // UART
     UART_Init();
 }
 
-
-void ADC_Init()
+void doMeas(uint8_t meas[ADC_CHNS])
 {
-  ADCON0 = 0x41; //ADC Module Turned ON and Clock is selected
-  ADCON1 = 0x00; //All pins as Analog Input
-                 //With reference voltages VDD and VSS
-}
-
-uint8_t ADC_Read(unsigned char channel)
-{
-  if(channel > 7) //If Invalid channel selected
-    return 0;     //Return 0
-
-  ADCON0 &= 0xC5; //Clearing the Channel Selection Bits
-  ADCON0 |= channel<<3; //Setting the required Bits
-  __delay_ms(2); //Acquisition time to charge hold capacitor
-  GO_nDONE = 1; //Initializes A/D Conversion
-  while(GO_nDONE); //Wait for A/D Conversion to complete
-  return (ADRESH); //Returns Result
+    uint8_t i;
+    for(i = 0; i < ADC_CHNS; i++){
+       meas[i] = ADC_Read(i);
+   }
 }
 
 
