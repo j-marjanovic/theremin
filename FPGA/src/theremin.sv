@@ -10,7 +10,7 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+`define DAC_debug
 
 module theremin (
 	input 		CLK_50,
@@ -26,7 +26,7 @@ module theremin (
 	input		CTRL_SS_n,
 	
 	//---------- DAC ---------------
-	output		DAC_SYNC,
+	output		DAC_SYNC_n,
 	output		DAC_DATAI,
 	output		DAC_SCLK
 );
@@ -163,6 +163,38 @@ delay #(
 
 //=========================================================
 // Output
+`ifdef DAC_debug
+logic [15:0]	DAC_dbg_out;
+logic	 		DAC_dbg_valid;
+/*
+altsource_probe #(
+	.sld_auto_instance_index ("YES"),
+	.sld_instance_index      (0),
+	.instance_id             ("DACS"),
+	.probe_width             (0),
+	.source_width            (17),
+	.source_initial_value    ("0"),
+	.enable_metastability    ("NO")
+) in_system_sources_probes_DAC (
+	.source ({DAC_dbg_valid, DAC_dbg_out})  // sources.source
+);*/
+
+logic [31:0] prescaler = 0;
+
+always @(posedge clk_50) begin
+	DAC_dbg_valid <= 0;
+	if(prescaler < 32'd5_000) begin
+		prescaler		<= prescaler + 1;
+	end
+	else begin
+		prescaler		<= 0;
+		DAC_dbg_out		<= DAC_dbg_out + 1;
+		DAC_dbg_valid	<= 1;
+	end
+end
+
+`endif
+
 AD5660_SPI # (
 	.BITS	( 24			),
 	.fCLK	( 50_000_000	),
@@ -171,10 +203,15 @@ AD5660_SPI # (
 	.clk	( clk_50 ),
 	.reset_n,
 	//------------ Input --------------------
+`ifdef DAC_debug
+	.in		( {2'd0, DAC_dbg_out, 6'd0} 	),
+	.go		( DAC_dbg_valid	),
+`else
 	.in		( delay_out 	),
 	.go		( delay_valid	),
+`endif
 	//------------ Output -------------------
-	.SS_n	( DAC_SYNC		),
+	.SS_n	( DAC_SYNC_n	),
 	.SCLK	( DAC_SCLK		),	
 	.SDO	( DAC_DATAI		)
 );
