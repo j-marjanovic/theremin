@@ -41,7 +41,7 @@ void main(void)
         createMeasString(str, ADCvalue);
         UART_Send_String(str);
 
-        __delay_ms(10); //Delay
+        __delay_ms(1); //Delay
     }
 
 }
