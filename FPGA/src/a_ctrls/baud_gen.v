@@ -10,18 +10,20 @@
 //
 //---------------------------------------------------------------------------------------
 
-module baud_gen 
-(
-	clock, reset, 
-	ce_16, baud_freq, baud_limit 
+module baud_gen # (
+	parameter fCLK		= 50_000_000,
+	parameter fBAUD		= 9_600
+)(
+	clock, 
+	reset, 
+	ce_16
 );
 //---------------------------------------------------------------------------------------
 // modules inputs and outputs 
 input 			clock;		// global clock input 
 input 			reset;		// global reset input 
 output			ce_16;		// baud rate multiplyed by 16 
-input	[11:0]	baud_freq;	// baud rate setting registers - see header description 
-input	[15:0]	baud_limit;
+localparam baud_limit = fCLK / (16*fBAUD);
 
 // internal registers 
 reg ce_16;
@@ -34,9 +36,9 @@ begin
 	if (reset) 
 		counter <= 16'b0;
 	else if (counter >= baud_limit) 
-		counter <= counter - baud_limit;
+		counter <= 0;
 	else 
-		counter <= counter + baud_freq;
+		counter <= counter + 1;
 end
 
 // clock divider output 
