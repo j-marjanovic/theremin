@@ -10,7 +10,9 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-`define DAC_debug
+//`define DAC_debug
+`define delay_disable
+`define tone_gen_debug
 
 module theremin (
 	input 		CLK_50,
@@ -21,9 +23,7 @@ module theremin (
 	input		ANT_IN,
 	
 	//---------- Controls ----------
-	input		CTRL_SCLK,
-	input		CTRL_MOSI,
-	input		CTRL_SS_n,
+	input		CTRL_RX,	// HDR2_2 on proto1 board
 	
 	//---------- DAC ---------------
 	output		DAC_SYNC_n,
@@ -46,14 +46,16 @@ wire [TC_BITS-1:0] freq;
 (* keep = 1 *) wire [A_BITS-1:0]	a8;
 (* keep = 1 *) wire [A_BITS-1:0]	a5;
 (* keep = 1 *) wire [A_BITS-1:0]	a4;
-(* keep = 1 *) wire [TONE_BITS-1:0] tone_out;
+(* keep = 1 *) wire [TONE_BITS+1:0] tone_out;
 
 parameter SIG_BITS	= 16;
 parameter BLEND_B	= 4;	
 parameter DLY_B		= 14;
 parameter FDB_B		= 10;
+`ifndef delay_disable
 wire [SIG_BITS-1:0]	delay_out;
 wire delay_valid;
+`endif
 (* keep = 1 *) logic [BLEND_B-1:0]	blend;		// Delay controls
 (* keep = 1 *) logic [DLY_B-1:0]	delay;
 (* keep = 1 *) logic [FDB_B-1:0]	feedbk;
@@ -125,26 +127,53 @@ f_compressor  #   (
 //=========================================================
 // Tone generator
 tone_gen # (
-	.F_BITS		( TC_BITS ),
-	.A_BITS		( A_BITS ),
-	.SIG_BITS	( TONE_BITS )
+	.F_BITS		( TC_BITS 	),
+	.A_BITS		( A_BITS 	),
+	.SIG_BITS	( TONE_BITS	)
 ) tone_gen_inst (
 	//------------ Clk and reset ------------
-	.clk		( clk_50 ),
+	.clk		( clk_50 	),
 	.reset_n,
 	//------------ Input --------------------
-	.freq		( freq ),
+`ifdef tone_gen_debug
+	.freq		( 100 		),
+`else
+	.freq		( freq 		),
+`endif
 	//------------ Tone Control -------------
+`ifdef tone_gen_debug
+	.a16			( 13 		),
+	.a5				( 5		),
+`else
 	.a16,
-	.a8,
 	.a5,
-	.a4,
+`endif
+	.a8,
 	//------------ Output control ------------------
-	.out		( tone_out )
+	.out		( tone_out 	)
 );
 
 //=========================================================
 // Delay
+`ifdef delay_disable
+
+logic [SIG_BITS-1:0]	delay_out;
+logic 					delay_valid;
+logic [16:0] 			sampling_prescaler;
+
+always_ff @ (posedge clk_50) begin
+	delay_valid		<= 0;
+	
+	sampling_prescaler	<= sampling_prescaler + 1;
+	
+	if(sampling_prescaler	== 50_000_000/48_000) begin
+		delay_out			<= tone_out[SIG_BITS+1:2];
+		sampling_prescaler	<= 0;
+		delay_valid			<= 1;
+	end
+end
+`else
+
 delay #( 
 	.SIG_BITS	( SIG_BITS 	),
 	.BLEND_B	( BLEND_B	),
@@ -161,23 +190,13 @@ delay #(
 	.feedbk,
 );
 
+`endif
+
 //=========================================================
 // Output
 `ifdef DAC_debug
 logic [15:0]	DAC_dbg_out;
 logic	 		DAC_dbg_valid;
-/*
-altsource_probe #(
-	.sld_auto_instance_index ("YES"),
-	.sld_instance_index      (0),
-	.instance_id             ("DACS"),
-	.probe_width             (0),
-	.source_width            (17),
-	.source_initial_value    ("0"),
-	.enable_metastability    ("NO")
-) in_system_sources_probes_DAC (
-	.source ({DAC_dbg_valid, DAC_dbg_out})  // sources.source
-);*/
 
 logic [31:0] prescaler = 0;
 
@@ -204,16 +223,16 @@ AD5660_SPI # (
 	.reset_n,
 	//------------ Input --------------------
 `ifdef DAC_debug
-	.in		( {2'd0, DAC_dbg_out, 6'd0} 	),
+	.in		( {2'd0, DAC_dbg_out, 6'd0} ),
 	.go		( DAC_dbg_valid	),
 `else
-	.in		( delay_out 	),
-	.go		( delay_valid	),
+	.in		( {2'd0, delay_out, 6'd0} 	),
+	.go		( delay_valid				),
 `endif
 	//------------ Output -------------------
-	.SS_n	( DAC_SYNC_n	),
-	.SCLK	( DAC_SCLK		),	
-	.SDO	( DAC_DATAI		)
+	.SS_n	( DAC_SYNC_n				),
+	.SCLK	( DAC_SCLK					),	
+	.SDO	( DAC_DATAI					)
 );
 
 	
@@ -226,11 +245,8 @@ a_ctrls # (
 	.clk		( clk_50	),
 	.reset_n,
 	//------------ Input --------------------
-	.CTRL_SCLK,
-	.CTRL_MOSI,
-	.CTRL_SS_n,
+	.CTRL_RX,
 	//------------ Tone Control -------------
-	.a16		( actrls_a16 	),
 	.a8			( actrls_a8 	),
 	.a5			( actrls_a5 	),
 	.a4			( actrls_a4 	),

@@ -27,7 +27,7 @@ module tone_gen # (
 	input		[A_BITS-1:0]	a5,
 	input		[A_BITS-1:0]	a4,
 	//------------ Output control -----------
-	output logic[SIG_BITS-1:0]	out
+	output logic[SIG_BITS+1:0]	out
 );
 
 //=============================================================================
