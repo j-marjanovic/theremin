@@ -136,19 +136,15 @@ tone_gen # (
 	.reset_n,
 	//------------ Input --------------------
 `ifdef tone_gen_debug
-	.freq		( 100 		),
+	.freq		( actrls_blend	),
 `else
 	.freq		( freq 		),
 `endif
 	//------------ Tone Control -------------
-`ifdef tone_gen_debug
-	.a16			( 13 		),
-	.a5				( 5		),
-`else
-	.a16,
-	.a5,
-`endif
-	.a8,
+	.a16		( 15			),
+	.a8			( actrls_a8		),
+	.a5			( actrls_a5		),
+	.a4			( actrls_a4		),
 	//------------ Output control ------------------
 	.out		( tone_out 	)
 );
