@@ -10,31 +10,15 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-module osc # (
-	parameter COUNT_MAX = 32'd10_000)
-	(
-	input 					clk_100,
-	input 					reset_n,
-	
-	output 					ant_out
-);
+                            Analog inputs for FPGA
 
-reg [31:0] counter;
+This Microchip PIC16F88 converts analog inputs and transmits data via UART
+to FPGA.
 
-reg ant_out_reg;
-assign ant_out = ant_out_reg; 
 
-always @ (posedge clk_100 or negedge reset_n) begin
-	if( ~reset_n ) begin
-		counter		<= 0;
-		ant_out_reg	<= 0;
-	end else begin
-		counter		<=	counter + 1;
-		if( counter == COUNT_MAX - 1 ) begin
-			counter		<= 0;
-			ant_out_reg	<= ~ ant_out_reg;
-		end
-	end
-end	
+UART is at 9600 bps.
 
-endmodule
+Produced output:
+MEAS:d5:a3:cf:02:33:00:f7:\r\n
+
+

@@ -48,10 +48,10 @@ always @ (posedge clk_100 or negedge reset_n) begin
 			time_const_count	<= 1;
 			
 		if ( time_const_count )
-			time_const_cntr	<= time_const_cntr + '1;
+			time_const_cntr	<= time_const_cntr + 1;
 			
 		if( bounce_counter > 0) 
-			bounce_counter = bounce_counter - '1;
+			bounce_counter = bounce_counter - 1;
 			
 		if( ant_in_prev3 == 0 && ant_in_prev2 && time_const_count && bounce_counter == 0 ) begin
 			time_const_count		<= 0;

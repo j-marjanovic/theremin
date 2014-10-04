@@ -50,12 +50,37 @@ set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
 set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_location_assignment PIN_23 -to CLK_50
+set_location_assignment PIN_120 -to ANT_IN
+set_location_assignment PIN_124 -to ANT_OUT
+set_location_assignment PIN_55 -to DAC_SYNC_n
+set_location_assignment PIN_58 -to DAC_SCLK
+set_location_assignment PIN_53 -to DAC_DATAI
+set_location_assignment PIN_125 -to EXT_RESET_n
+set_global_assignment -name ENABLE_SIGNALTAP OFF
+set_global_assignment -name USE_SIGNALTAP_FILE signal_taps/PIC_CTRL_in.stp
+set_global_assignment -name VERILOG_FILE src/a_ctrls/uart_rx.v
+set_global_assignment -name VERILOG_FILE src/a_ctrls/baud_gen.v
+set_global_assignment -name SYSTEMVERILOG_FILE src/a_ctrls/a_ctrls_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/a_ctrls/a_ctrls.sv
+set_global_assignment -name VERILOG_FILE src/f_compressor.v
+set_global_assignment -name SYSTEMVERILOG_FILE src/AD5660_SPI.sv
+set_global_assignment -name QIP_FILE delay_mem/delay_mem.qip
+set_global_assignment -name SYSTEMVERILOG_FILE src/mixer.sv
+set_global_assignment -name SYSTEMVERILOG_FILE src/delay.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/theremin.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/osc.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/tc_meas.sv
 set_global_assignment -name QIP_FILE pll/pll_100.qip
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name SYSTEMVERILOG_FILE src/tone_gen.sv
+set_global_assignment -name SDC_FILE constr/clocks.sdc
+set_global_assignment -name SIGNALTAP_FILE signal_taps/DAC.stp
+set_location_assignment PIN_67 -to CTRL_RX
+set_global_assignment -name SIGNALTAP_FILE signal_taps/PIC_CTRL_in.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
