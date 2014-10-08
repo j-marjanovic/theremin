@@ -47,7 +47,6 @@ set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
-set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
@@ -65,6 +64,53 @@ set_location_assignment PIN_53 -to DAC_DATAI
 set_location_assignment PIN_125 -to EXT_RESET_n
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE signal_taps/PIC_CTRL_in.stp
+set_location_assignment PIN_67 -to CTRL_RX
+set_location_assignment PIN_7 -to DRAM_ADDR[11]
+set_location_assignment PIN_1 -to DRAM_ADDR[10]
+set_location_assignment PIN_100 -to DRAM_ADDR[9]
+set_location_assignment PIN_101 -to DRAM_ADDR[8]
+set_location_assignment PIN_103 -to DRAM_ADDR[7]
+set_location_assignment PIN_104 -to DRAM_ADDR[6]
+set_location_assignment PIN_105 -to DRAM_ADDR[5]
+set_location_assignment PIN_106 -to DRAM_ADDR[4]
+set_location_assignment PIN_141 -to DRAM_ADDR[3]
+set_location_assignment PIN_144 -to DRAM_ADDR[2]
+set_location_assignment PIN_143 -to DRAM_ADDR[1]
+set_location_assignment PIN_2 -to DRAM_ADDR[0]
+set_location_assignment PIN_10 -to DRAM_CASn
+set_location_assignment PIN_99 -to DRAM_CKE
+set_location_assignment PIN_87 -to DRAM_CLK
+set_location_assignment PIN_3 -to DRAM_CSn
+set_location_assignment PIN_74 -to DRAM_DATA[15]
+set_location_assignment PIN_75 -to DRAM_DATA[14]
+set_location_assignment PIN_76 -to DRAM_DATA[13]
+set_location_assignment PIN_77 -to DRAM_DATA[12]
+set_location_assignment PIN_80 -to DRAM_DATA[11]
+set_location_assignment PIN_83 -to DRAM_DATA[10]
+set_location_assignment PIN_84 -to DRAM_DATA[9]
+set_location_assignment PIN_85 -to DRAM_DATA[8]
+set_location_assignment PIN_32 -to DRAM_DATA[7]
+set_location_assignment PIN_31 -to DRAM_DATA[6]
+set_location_assignment PIN_34 -to DRAM_DATA[5]
+set_location_assignment PIN_33 -to DRAM_DATA[4]
+set_location_assignment PIN_39 -to DRAM_DATA[3]
+set_location_assignment PIN_38 -to DRAM_DATA[2]
+set_location_assignment PIN_43 -to DRAM_DATA[1]
+set_location_assignment PIN_42 -to DRAM_DATA[0]
+set_location_assignment PIN_28 -to DRAM_LDQM
+set_location_assignment PIN_11 -to DRAM_RASn
+set_location_assignment PIN_86 -to DRAM_UDQM
+set_location_assignment PIN_30 -to DRAM_WEn
+set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+set_global_assignment -name USE_CONFIGURATION_DEVICE OFF
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
+set_global_assignment -name QIP_FILE mem_controller/synthesis/mem_controller.qip
 set_global_assignment -name VERILOG_FILE src/a_ctrls/uart_rx.v
 set_global_assignment -name VERILOG_FILE src/a_ctrls/baud_gen.v
 set_global_assignment -name SYSTEMVERILOG_FILE src/a_ctrls/a_ctrls_decode.sv
@@ -81,6 +127,8 @@ set_global_assignment -name QIP_FILE pll/pll_100.qip
 set_global_assignment -name SYSTEMVERILOG_FILE src/tone_gen.sv
 set_global_assignment -name SDC_FILE constr/clocks.sdc
 set_global_assignment -name SIGNALTAP_FILE signal_taps/DAC.stp
-set_location_assignment PIN_67 -to CTRL_RX
 set_global_assignment -name SIGNALTAP_FILE signal_taps/PIC_CTRL_in.stp
+set_global_assignment -name SDC_FILE constr/SDRAM.sdc
+set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
+set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

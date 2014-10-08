@@ -24,6 +24,18 @@ module theremin (
 	
 	//---------- Controls ----------
 	input		CTRL_RX,	// HDR2_2 on proto1 board
+
+	//---------- SDRAM -------------
+	output			DRAM_CLK,
+	output			DRAM_CKE,
+	output	[11:0]	DRAM_ADDR,
+	output			DRAM_UDQM,
+	output			DRAM_LDQM,
+	output			DRAM_RASn,
+	output			DRAM_CASn,
+	output			DRAM_WEn,
+	output			DRAM_CSn,
+	inout 	[15:0]	DRAM_DATA,
 	
 	//---------- DAC ---------------
 	output		DAC_SYNC_n,
@@ -252,6 +264,25 @@ a_ctrls # (
 	.feedbk		( actrls_feedbk ),
 	//------------ Gain Control -------------
 	.gain		( actrls_gain 	)
+);
+
+//=========================================================
+// Memory controller
+
+mem_controller mem_controller_inst (
+	.clk_clk        ( clk_50			),		//      clk.clk
+	.reset_reset_n  ( reset_n			),		//    reset.reset_n
+	.mem_wire_addr  ( DRAM_ADDR[10:0]	),		// mem_wire.addr
+	.mem_wire_ba    ( DRAM_ADDR[11]		),		//         .ba
+	.mem_wire_cas_n ( DRAM_CASn			),		//         .cas_n
+	.mem_wire_cke   ( DRAM_CKE			),		//         .cke
+	.mem_wire_cs_n  ( DRAM_CSn 			),		//         .cs_n
+	.mem_wire_dq    ( DRAM_DATA 		),		//         .dq
+	.mem_wire_dqm   ( {	DRAM_UDQM, 
+						DRAM_LDQM }		),		//         .dqm
+	.mem_wire_ras_n ( DRAM_RASn 		),		//         .ras_n
+	.mem_wire_we_n  ( DRAM_WEn			),		//         .we_n
+	.mem_clk_clk    ( DRAM_CLK 			)		//  mem_clk.clk
 );
 
 
