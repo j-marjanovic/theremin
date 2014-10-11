@@ -6,7 +6,7 @@
    version="1.0"
    description=""
    tags=""
-   categories="" />
+   categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
    element $${FILENAME}
@@ -52,6 +52,22 @@
          type = "int";
       }
    }
+   element mm_clock_crossing_bridge_0
+   {
+      datum _sortIndex
+      {
+         value = "5";
+         type = "int";
+      }
+   }
+   element simple_2_avalon
+   {
+      datum _sortIndex
+      {
+         value = "6";
+         type = "int";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
@@ -65,7 +81,7 @@
  <parameter name="hdlLanguage" value="VERILOG" />
  <parameter name="hideFromIPCatalog" value="false" />
  <parameter name="maxAdditionalLatency" value="1" />
- <parameter name="projectName" value="" />
+ <parameter name="projectName" value="theremin.qpf" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="0" />
  <parameter name="testBenchDutName" value="" />
@@ -80,6 +96,11 @@
    internal="clock_bridge_0.out_clk"
    type="clock"
    dir="start" />
+ <interface
+   name="simple_2_avalon_conduit_end_0"
+   internal="simple_2_avalon.conduit_end_0"
+   type="conduit"
+   dir="end" />
  <module kind="clock_source" version="14.0" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -99,7 +120,7 @@
   <parameter name="casLatency" value="3" />
   <parameter name="columnWidth" value="8" />
   <parameter name="dataWidth" value="16" />
-  <parameter name="generateSimulationModel" value="false" />
+  <parameter name="generateSimulationModel" value="true" />
   <parameter name="initRefreshCommands" value="2" />
   <parameter name="model">single_Micron_MT48LC4M32B2_7_chip</parameter>
   <parameter name="numberOfBanks" value="2" />
@@ -304,12 +325,35 @@
   <parameter name="EXPLICIT_CLOCK_RATE" value="0" />
   <parameter name="NUM_CLOCK_OUTPUTS" value="1" />
  </module>
+ <module
+   kind="simple_2_avalon"
+   version="1.0"
+   enabled="1"
+   name="simple_2_avalon">
+  <parameter name="ADDR_W" value="21" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="50000000" />
+ </module>
+ <module
+   kind="altera_avalon_mm_clock_crossing_bridge"
+   version="14.0"
+   enabled="1"
+   name="mm_clock_crossing_bridge_0">
+  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="SYMBOL_WIDTH" value="8" />
+  <parameter name="ADDRESS_WIDTH" value="21" />
+  <parameter name="SYSINFO_ADDR_WIDTH" value="21" />
+  <parameter name="USE_AUTO_ADDRESS_WIDTH" value="0" />
+  <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
+  <parameter name="MAX_BURST_SIZE" value="1" />
+  <parameter name="COMMAND_FIFO_DEPTH" value="4" />
+  <parameter name="RESPONSE_FIFO_DEPTH" value="4" />
+  <parameter name="MASTER_SYNC_DEPTH" value="2" />
+  <parameter name="SLAVE_SYNC_DEPTH" value="2" />
+  <parameter name="AUTO_M0_CLK_CLOCK_RATE" value="100000000" />
+  <parameter name="AUTO_S0_CLK_CLOCK_RATE" value="50000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV E" />
+ </module>
  <connection kind="reset" version="14.0" start="clk_50.clk_reset" end="mem.reset" />
- <connection kind="avalon" version="14.0" start="master_0.master" end="mem.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection
    kind="reset"
    version="14.0"
@@ -337,6 +381,59 @@
    version="14.0"
    start="altpll_0.c0"
    end="clock_bridge_0.in_clk" />
+ <connection kind="avalon" version="14.0" start="master_0.master" end="mem.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="simple_2_avalon.master"
+   end="mm_clock_crossing_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="mem.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_50.clk_reset"
+   end="mm_clock_crossing_bridge_0.m0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_50.clk_reset"
+   end="mm_clock_crossing_bridge_0.s0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_50.clk_reset"
+   end="simple_2_avalon.reset" />
+ <connection
+   kind="clock"
+   version="14.0"
+   start="altpll_0.c0"
+   end="mm_clock_crossing_bridge_0.m0_clk" />
+ <connection
+   kind="clock"
+   version="14.0"
+   start="clk_50.clk"
+   end="mm_clock_crossing_bridge_0.s0_clk" />
+ <connection
+   kind="clock"
+   version="14.0"
+   start="clk_50.clk"
+   end="simple_2_avalon.clock" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />
