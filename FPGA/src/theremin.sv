@@ -206,7 +206,7 @@ delay #(
 	.valid			( delay_valid	),
 	.out			( delay_out		),
 	.blend			( actrls_a8 	),
-	.delay			( {actrls_a5, 8'd0, 3'd0} 	),
+	.delay			( {2'd0, actrls_a5, 8'd0, 1'd0} 	),
 	.feedbk			( actrls_a4		),
 /*
 	.blend			( actrls_blend 	),
