@@ -35,8 +35,22 @@ module simple_2_avalon  #(
 	output logic			coe_simple_readdone
 );
 
+enum {
+	read_idle,
+	read_read
+} state_read;
+
+enum {
+	write_idle,
+	write_wait_read,
+	write_write
+} state_write;
+
+
 logic [31:0] 	wr_buffer;
 logic			wr_do, rd_do;
+
+
 always_ff @ (posedge clk or negedge reset_n) begin
 	if ( !reset_n ) begin	
 		wr_buffer	<= 0;
@@ -44,40 +58,45 @@ always_ff @ (posedge clk or negedge reset_n) begin
 		rd_do		<= 0;
 	end else begin
 	
-		if (coe_simple_read)	
+		if (coe_simple_read && (state_read != read_idle) )	
 			rd_do	<= 1;
-			
-		if( coe_simple_write) begin	
-			wr_do		<= 1;
+	
+		if (state_read == read_read)
+			rd_do	<= 0;
+
+		if ( coe_simple_write )
 			wr_buffer	<= coe_simple_writedata;
+			
+		if( coe_simple_write && ((state_write != write_idle) || coe_simple_read) ) begin	
+			wr_do		<= 1;
 		end
+
+		if (state_write == write_write)
+			wr_do	<= 0;
 		
 	end
 end
 
 //=============================================================================
 // Read
-enum {
-	read_idle,
-	read_read
-} state_read;
 
 always_ff @ (posedge clk or negedge reset_n) begin
 	if ( !reset_n ) begin
-		state_read	<= read_idle;
+		state_read		<= read_idle;
+		avm_master_read	<= 0;
 	end else begin
 		case (state_read)
 		///
 		read_idle: begin
 			if ( coe_simple_read || rd_do ) begin
-				state_read			<= read_read;
+				state_read		<= read_read;
 				avm_master_read	<= 1;
 			end 
 		end
 		///
 		read_read: begin
 			if( avm_master_waitrequest == 0 )
-				state_read			<= read_idle;
+				state_read		<= read_idle;
 				avm_master_read	<= 0;
 		end
 		endcase
@@ -102,21 +121,17 @@ end
 //=============================================================================
 // Write
 
-enum {
-	write_idle,
-	write_wait_read,
-	write_write
-} state_write;
-
 always_ff @ (posedge clk or negedge reset_n) begin
 	if ( !reset_n ) begin
-		state_write		<= write_idle;
+		state_write			<= write_idle;
+		avm_master_write	<= 0;
+		avm_master_writedata<= 0;
 	end else begin
 		case( state_write ) 
 		///
 		write_idle: begin
 			if (coe_simple_write || wr_do) begin
-				if (state_read == read_idle) begin
+				if (state_read == read_idle && coe_simple_read == 0) begin
 					state_write			<= write_write;
 					avm_master_write	<= 1;
 					avm_master_writedata<= coe_simple_writedata;
@@ -130,7 +145,7 @@ always_ff @ (posedge clk or negedge reset_n) begin
 			if (state_read == read_idle) begin
 				state_write			<= write_write;
 				avm_master_write	<= 1;
-				avm_master_writedata<= coe_simple_writedata;
+				avm_master_writedata<= wr_buffer;
 			end
 		end
 		///
@@ -162,7 +177,7 @@ end
 //=============================================================================
 // Address
 
-assign avm_master_address = avm_master_read ? rd_addr_latch : wr_addr_latch;
+assign avm_master_address = avm_master_read ? {rd_addr_latch, 2'd0} : {wr_addr_latch, 2'd0};
 
 
 endmodule
