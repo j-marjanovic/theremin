@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //`define DAC_debug
-`define delay_disable
+//`define delay_disable
 `define tone_gen_debug
 
 module theremin (
@@ -61,16 +61,13 @@ wire [TC_BITS-1:0] freq;
 (* keep = 1 *) wire [TONE_BITS+1:0] tone_out;
 
 parameter SIG_BITS	= 16;
-parameter BLEND_B	= 4;	
-parameter DLY_B		= 14;
-parameter FDB_B		= 10;
+parameter BLEND_B	= 8;	
+parameter DLY_B		= 19;
+parameter FDB_B		= 8;
 `ifndef delay_disable
 wire [SIG_BITS-1:0]	delay_out;
 wire delay_valid;
 `endif
-(* keep = 1 *) logic [BLEND_B-1:0]	blend;		// Delay controls
-(* keep = 1 *) logic [DLY_B-1:0]	delay;
-(* keep = 1 *) logic [FDB_B-1:0]	feedbk;
 
 wire [7:0] actrls_a16;
 wire [7:0] actrls_a8;
@@ -80,6 +77,14 @@ wire [7:0] actrls_blend;
 wire [7:0] actrls_delay;
 wire [7:0] actrls_feedbk;
 wire [7:0] actrls_gain;
+
+wire 		mem_write;
+wire [31:0]	mem_writedata;
+wire [18:0] mem_writeaddr;
+wire 		mem_read;
+wire [31:0]	mem_readdata;
+wire [18:0]	mem_readaddr;
+wire 		mem_readdone;
 
 //=========================================================
 // PLL 100 MHz
@@ -148,15 +153,20 @@ tone_gen # (
 	.reset_n,
 	//------------ Input --------------------
 `ifdef tone_gen_debug
-	.freq		( actrls_blend	),
+	.freq		( {8'd0, actrls_blend}	),
+	.a16		( 15			),
+	.a8			( 0			),
+	.a5			( 0			),
+	.a4			( 0			),
 `else
 	.freq		( freq 		),
-`endif
 	//------------ Tone Control -------------
 	.a16		( 15			),
 	.a8			( actrls_a8		),
 	.a5			( actrls_a5		),
 	.a4			( actrls_a4		),
+//TODO: number of bits
+`endif
 	//------------ Output control ------------------
 	.out		( tone_out 	)
 );
@@ -183,19 +193,32 @@ end
 `else
 
 delay #( 
-	.SIG_BITS	( SIG_BITS 	),
-	.BLEND_B	( BLEND_B	),
-	.DLY_B		( DLY_B		),
-	.FDB_B		( FDB_B		)
+	.SIG_BITS		( SIG_BITS 		),
+	.BLEND_B		( BLEND_B		),
+	.DLY_B			( DLY_B			),
+	.FDB_B			( FDB_B			),
+	.fSAMP			( 192_000		),
+	.ADDR_W			( 19			)
 ) delay_inst ( 	
-	.clk	( clk_50		),
+	.clk			( clk_50		),
 	.reset_n,
-	.in		( tone_out		),
-	.valid	( delay_valid	),
-	.out	( delay_out		),
-	.blend,
-	.delay,
-	.feedbk,
+	.in				( tone_out		),
+	.valid			( delay_valid	),
+	.out			( delay_out		),
+	.blend			( actrls_a8 	),
+	.delay			( {actrls_a5, 8'd0, 3'd0} 	),
+	.feedbk			( actrls_a4		),
+/*
+	.blend			( actrls_blend 	),
+	.delay			( actrls_delay 	),
+	.feedbk			( actrls_feedbk ),*/
+	.mem_write      ( mem_write		),
+	.mem_writedata  ( mem_writedata	),
+	.mem_writeaddr  ( mem_writeaddr	),
+	.mem_read       ( mem_read		),
+	.mem_readdata   ( mem_readdata	),
+	.mem_readaddr   ( mem_readaddr	),
+	.mem_readdone   ( mem_readdone	)
 );
 
 `endif
@@ -271,6 +294,7 @@ a_ctrls # (
 
 mem_controller mem_controller_inst (
 	.clk_clk        ( clk_50			),		//      clk.clk
+	.clk_100_clk	( clk_100			),		//  clk_100.clk
 	.reset_reset_n  ( reset_n			),		//    reset.reset_n
 	.mem_wire_addr  ( DRAM_ADDR[10:0]	),		// mem_wire.addr
 	.mem_wire_ba    ( DRAM_ADDR[11]		),		//         .ba
@@ -282,8 +306,14 @@ mem_controller mem_controller_inst (
 						DRAM_LDQM }		),		//         .dqm
 	.mem_wire_ras_n ( DRAM_RASn 		),		//         .ras_n
 	.mem_wire_we_n  ( DRAM_WEn			),		//         .we_n
-	.mem_clk_clk    ( DRAM_CLK 			)		//  mem_clk.clk
+	.mem_clk_clk    ( DRAM_CLK 			),		//  mem_clk.clk
+	.s2a_write      ( mem_write			),		//      s2a.write
+	.s2a_writedata  ( mem_writedata		),		//         .writedata
+	.s2a_writeaddr  ( mem_writeaddr		),		//         .writeaddr
+	.s2a_read       ( mem_read			),		//         .read
+	.s2a_readdata   ( mem_readdata		),		//         .readdata
+	.s2a_readaddr   ( mem_readaddr		),		//         .readaddr
+	.s2a_readdone   ( mem_readdone		)		//         .readdone
 );
-
 
 endmodule

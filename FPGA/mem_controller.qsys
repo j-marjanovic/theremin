@@ -97,7 +97,7 @@
    type="clock"
    dir="start" />
  <interface
-   name="simple_2_avalon_conduit_end_0"
+   name="s2a"
    internal="simple_2_avalon.conduit_end_0"
    type="conduit"
    dir="end" />

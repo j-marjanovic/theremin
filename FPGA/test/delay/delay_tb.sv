@@ -36,19 +36,22 @@ end
 // Module
 parameter SIG_BITS	= 16;
 parameter BLEND_B	= 4;	
-parameter DLY_B		= 14;
+parameter DLY_B		= 13;
 parameter FDB_B		= 10;
 
 logic [SIG_BITS-1:0]	in;
 //------------ Output -------------------
 wire [SIG_BITS-1:0]	out;
+wire			valid;
 //------------ Control ------------------
 logic [BLEND_B-1:0]	blend;
 logic [DLY_B-1:0]	delay;
 logic [FDB_B-1:0]	feedbk;
 
 delay #( 
-	.BLEND_B(BLEND_B)
+	.DLY_B	( 13		),
+	.BLEND_B(BLEND_B),
+	.fSAMP	( 50_000_000)
 ) delay_inst ( .* );
 
 //=============================================================================
@@ -65,10 +68,12 @@ initial begin
 	$display("%t: Going out of reset", $time());
 
 	delay = 1000;
-	#(25ms);
+	#(170us);
+	delay = 100;
+	/*#(25ms);
 	
 	delay = 500;
-	#(10ms);
+	#(10ms);*/
 
 
 end
