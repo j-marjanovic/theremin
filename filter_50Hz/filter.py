@@ -48,14 +48,25 @@ def quantize(val):
     
     return val
     
-def to_bits(val):
-    if val > 0:
-        return hex(int(val*2**_bits_frac))
-    if val < 0:
-        val = int(-val*2**_bits_frac)
-        val ^= 2**(_bits)-1
-        val += 1
-        return hex(val)
+def to_bits(d):
+    if d > 0:
+        hexStr = hex(int(d*2**_bits_frac))
+    if d < 0:
+        d = int(-d*2**_bits_frac)
+        d ^= 2**(_bits)-1
+        d += 1
+        hexStr = hex(d)
+    
+    print hexStr
+    hexStr = hexStr[2:]
+    nib = int(math.ceil(_bits/4.))
+    
+    print "nib", nib
+    print "len", len(hexStr)
+    hexStr = "0"*(nib-len(hexStr)) + hexStr
+    
+    return str(_bits)+"'h"+hexStr
+    
         
         
 ###############################################################################
@@ -101,8 +112,26 @@ def plot_step_response(a,b):
 
 
 ###############################################################################
-def gen_verilog_filter(a,b,fSamp,fClk,inBits, outBits):
-    pass
+def gen_a_b_str(a,b):
+    a_str = ""
+    a = a[1:] # first one is 1. (y[i])
+    for ai in a:
+        a_str += ", " + to_bits(-ai)
+        
+    a_str = a_str[1:]
+    
+    b_str = ""
+    for bi in b:
+        b_str += ", " + to_bits(bi)
+        
+    b_str = b_str[1:]
+    
+    return a_str, b_str
+        
+
+def gen_verilog_filter():
+    print "Generating SystemVerilog filter"
+    
 
 ###############################################################################
 def gen_test_signal():
@@ -119,3 +148,8 @@ def gen_test_signal():
     
 if __name__ == '__main__':
     plot_step_response(a,b)
+    
+    sel = raw_input("Generate filter[y/N]?")
+    
+    if sel[0].lower() == 'y':
+        gen_verilog_filter()

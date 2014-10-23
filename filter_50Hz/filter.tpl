@@ -14,9 +14,9 @@
 //`define DEBUG
 
 module filter #(
-	parameter IO_B		= 16,	// input and output data width
-	parameter INT_B		= 7,	// integer part of internal quotient
-	parameter FRAC_B	= 24	// integer part of internal quotient
+	parameter IO_B		= #I0_B#,	// input and output data width
+	parameter INT_B		= #INT_B#,	// integer part of internal quotient
+	parameter FRAC_B	= #FRAC_B#	// integer part of internal quotient
 ) (
 	//---------- Clock and reset-----------
 	input				clk,
@@ -32,8 +32,11 @@ module filter #(
 
 localparam Q_BITS = INT_B + FRAC_B + 1;
 
-localparam signed [Q_BITS-1:0] A [3] = { 32'h02fb779f, 32'hfd09029f, 32'h00fb85a7 }; // a starta z a1
-localparam signed [Q_BITS-1:0] B [4] = { 32'h00009341, 32'hffff6ccc, 32'hffff6ccc, 32'h00009341 }; // starta z b0
+localparam signed [Q_BITS-1:0] A [#A_LEN#] = 
+	{ #A# };
+localparam signed [Q_BITS-1:0] B [#B_LEN#] = 
+	{ #B# };
+
 
 localparam _nr_params = $size(A) + $size (B);
 
