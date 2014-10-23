@@ -1,3 +1,16 @@
+///////////////////////////////////////////////////////////////////////////////
+//   __  __          _____      _         _   _  ______      _______ _____   //
+//  |  \/  |   /\   |  __ \    | |  /\   | \ | |/ __ \ \    / /_   _/ ____|  //
+//  | \  / |  /  \  | |__) |   | | /  \  |  \| | |  | \ \  / /  | || |       //
+//  | |\/| | / /\ \ |  _  /_   | |/ /\ \ | . ` | |  | |\ \/ /   | || |       //
+//  | |  | |/ ____ \| | \ \ |__| / ____ \| |\  | |__| | \  /   _| || |____   //
+//  |_|  |_/_/    \_\_|  \_\____/_/    \_\_| \_|\____/   \/   |_____\_____|  //
+//                                                                           //
+//                          JAN MARJANOVIC, 2014                             //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+
 `timescale 1ns/100ps
 
 module filter_tb;
@@ -11,10 +24,10 @@ localparam real 	Tclk = 10.0;
 bit 				clk = 0;
 bit 				reset_n = 1;
 
-logic	[IN_B-1:0]	in_data = 0;
+logic	[15:0]	in_data = 0;
 logic				in_valid;
 
-logic [OUT_B-1:0]	out_data;
+logic [15:0]	out_data;
 logic 				out_valid;
 
 
@@ -33,7 +46,7 @@ end
 
 int counter = 0, idx = 0;
 
-/*
+
 logic [16:0] signal [10000];
 initial begin
 `include "signal.h"
@@ -50,7 +63,7 @@ always @ (posedge clk) begin
 
 	end
 end
-*/
+
 /*
 always @ (posedge clk) begin	
 	in_valid	<= 0;
@@ -60,7 +73,6 @@ always @ (posedge clk) begin
 		counter = 0;
 	end
 end
-*/
 
 initial begin
 	forever begin
@@ -88,12 +100,10 @@ initial begin
 	#(100ms);
 
 end
+*/
 
 //=============================================================================
-filter  #(
-	.IN_B	( IN_B		),
-	.OUT_B	( OUT_B		)
-) filter_inst ( .* );
+filter filter_inst ( .* );
 
 
 endmodule
