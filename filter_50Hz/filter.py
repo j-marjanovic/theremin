@@ -40,6 +40,7 @@ b,a = sig.iirdesign(wp = Fpass/(Fsamp/2.0),
                     gstop = gstop,
                     analog = False)
                     
+                    
          
 
            
@@ -81,7 +82,8 @@ def plot_step_response(a,b):
     bq = [quantize(bi) for bi in b]
     
     T = np.linspace(0,1,Fsamp)
-    u = [0.25] * (len(a)-1+int(Fsamp))
+    u = [0.0] * 1000
+    u.extend([0.25] * (len(a)-1+int(Fsamp)-1000))
     y = [0] * (len(a)-1+int(Fsamp))
     yq = [0] * (len(a)-1+int(Fsamp))
         
