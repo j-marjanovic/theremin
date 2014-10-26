@@ -22,7 +22,8 @@ import numpy as np
 # 1 bit sign, 7 bits integer, 24 bit fraction
 _bits_int  = 7
 _bits_frac = 24
-_bits = _bits_int + _bits_frac + 1
+_bits_io   = 16
+
 
 Fsamp = 10000.
 Ts = 1.0/Fsamp
@@ -31,11 +32,18 @@ Fstop = 40.
 gpass = 0.1
 gstop = 20
 
+
+#########
 b,a = sig.iirdesign(wp = Fpass/(Fsamp/2.0),
                     ws = Fstop/(Fsamp/2.0),
                     gpass = gpass,
                     gstop = gstop,
                     analog = False)
+                    
+         
+
+           
+_bits = _bits_int + _bits_frac + 1
    
 ###############################################################################
 def quantize(val):
@@ -57,12 +65,9 @@ def to_bits(d):
         d += 1
         hexStr = hex(d)
     
-    print hexStr
     hexStr = hexStr[2:]
     nib = int(math.ceil(_bits/4.))
     
-    print "nib", nib
-    print "len", len(hexStr)
     hexStr = "0"*(nib-len(hexStr)) + hexStr
     
     return str(_bits)+"'h"+hexStr
@@ -108,6 +113,7 @@ def plot_step_response(a,b):
         yq[i] = quantize(ya)
     
     plt.plot(yq)
+    plt.show(block=True)
 
 
 
@@ -128,10 +134,42 @@ def gen_a_b_str(a,b):
     
     return a_str, b_str
         
-
+###############################################################################
 def gen_verilog_filter():
-    print "Generating SystemVerilog filter"
+    print "Generating SystemVerilog filter module"
+
+    a_str, b_str = gen_a_b_str(a,b)    
     
+    ftpl = open("filter.tpl", "r")
+    fsv  = open("filter.sv", "w")
+    
+    for line in ftpl:
+        line = line.replace("#I0_B#", str(_bits_io))
+        line = line.replace("#INT_B#", str(_bits_int))
+        line = line.replace("#FRAC_B#", str(_bits_frac))
+        line = line.replace("#A_LEN#", str(len(a)-1))
+        line = line.replace("#B_LEN#", str(len(b)))
+        line = line.replace("#A#", a_str)
+        line = line.replace("#B#", b_str)
+        fsv.write(line)
+    
+    ftpl.close()
+    fsv.close()
+    
+###############################################################################
+def gen_verilog_tb():
+    print "Generating SystemVerilog testbench"
+    
+    ftpl = open("filter_tb.tpl", "r")
+    fsv  = open("filter_tb.sv", "w")
+    
+    for line in ftpl:
+        line = line.replace("#IO_B#", str(_bits_io))
+        line = line.replace("#SIG_LEN#", str(int(Fsamp)))
+        fsv.write(line)
+    
+    ftpl.close()
+    fsv.close()
 
 ###############################################################################
 def gen_test_signal():
@@ -146,6 +184,7 @@ def gen_test_signal():
         f.write("signal["+str(i)+"] = 16'd"+str(int(y[i]))+";\n")
     f.close()
     
+###############################################################################
 if __name__ == '__main__':
     plot_step_response(a,b)
     
@@ -153,3 +192,5 @@ if __name__ == '__main__':
     
     if sel[0].lower() == 'y':
         gen_verilog_filter()
+        gen_verilog_tb()
+        gen_test_signal()
