@@ -21,6 +21,7 @@ module theremin (
 	//---------- Antenna -----------
 	output		ANT_OUT,
 	input		ANT_IN,
+	input		ANT_IN2,
 	
 	//---------- Controls ----------
 	input		CTRL_RX,	// HDR2_2 on proto1 board
@@ -47,9 +48,12 @@ wire clk_100;
 wire clk_50 = CLK_50;
 wire reset_n = EXT_RESET_n;
 
-localparam TC_BITS = 16; 		// output from time constant
+localparam TC_BITS = 14; 		// output from time constant
 (* keep = 1 *) wire [TC_BITS-1:0] 	tc_data;
 wire				tc_valid;
+
+wire [15:0] filt_data;
+wire		filt_valid;
 
 localparam	A_BITS 	= 3; 		// Hammond registers
 localparam	TONE_BITS = 16;
@@ -108,19 +112,34 @@ osc # (
 tc_meas # (
 	.D_BITS( TC_BITS )
 )	tc_meas_inst(
-	.clk_100,
+	.clk		( clk_100 ),
 	.reset_n,
 	
 	.ant_out	( ANT_OUT ),
-	.ant_in		( ANT_IN ),
+	.ant_in		( ANT_IN  ),
 	
 	.out_data	( tc_data ),
 	.out_valid	( tc_valid )
 );
 
 //=========================================================
+// Filter
+filter_50 filter_50_inst (
+	//---------- Clock and reset-----------
+	.clk		( clk_100			),
+	.reset_n
+	//---------- Input --------------------
+	.in_data	( {2'd0, tc_data}	),
+	.in_valid	( tc_valid			),
+	//---------- Output -------------------
+	.out_data	( filt_data			),
+	.out_valid	( filt_valid		)
+);
+
+//=========================================================
 // Tc to Freq converter
-f_compressor  #   (
+
+/*f_compressor  #   (
 	.F_IN_1			( 1200 			),
 	.F_OUT_1		( 10 			),
 	
@@ -134,12 +153,13 @@ f_compressor  #   (
 	.clk			( clk_50 		),
 	.reset_n		( reset_n 		),
 	//------------ Input data ----------------------
-	.in				( tc_data[15:2] ),
+	//.in				( tc_data[15:2] ),
 	.go				( 1 			),
 	//------------ Output data ---------------------
 	.out			( freq 			),
 	.done			(  				)
-);
+);*/
+
 
 //=========================================================
 // Tone generator
@@ -291,7 +311,7 @@ a_ctrls # (
 
 //=========================================================
 // Memory controller
-
+/*
 mem_controller mem_controller_inst (
 	.clk_clk        ( clk_50			),		//      clk.clk
 	.clk_100_clk	( clk_100			),		//  clk_100.clk
@@ -315,5 +335,6 @@ mem_controller mem_controller_inst (
 	.s2a_readaddr   ( mem_readaddr		),		//         .readaddr
 	.s2a_readdone   ( mem_readdone		)		//         .readdone
 );
+*/
 
 endmodule
