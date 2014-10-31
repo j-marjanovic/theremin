@@ -151,19 +151,6 @@ filter_avg filter_avg_inst (
 	.out_valid	( filt_valid		)
 );
 
-/*
-filter_50 filter_50_inst (
-	//---------- Clock and reset-----------
-	.clk		( clk_50			),
-	.reset_n,
-	//---------- Input --------------------
-	.in_data	( {2'd0, fifo_data}	),
-	.in_valid	( fifo_valid		),
-	//---------- Output -------------------
-	.out_data	( filt_data			),
-	.out_valid	( filt_valid		)
-);
-*/
 //=========================================================
 // Tc to Freq converter
 
@@ -171,7 +158,7 @@ antilog  #(
 	.IN_B		( 16		),
 	.OUT_B		( 12		),
 	.LUT_B		( 9			),
-	.IN_OFFSET	( 3100		)
+	.IN_OFFSET	( 2400		)
 ) antilog_inst ( 
 	.clk		( clk_50		),
 	.reset_n,

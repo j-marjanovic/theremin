@@ -1,0 +1,146 @@
+///////////////////////////////////////////////////////////////////////////////
+//   __  __          _____      _         _   _  ______      _______ _____   //
+//  |  \/  |   /\   |  __ \    | |  /\   | \ | |/ __ \ \    / /_   _/ ____|  //
+//  | \  / |  /  \  | |__) |   | | /  \  |  \| | |  | \ \  / /  | || |       //
+//  | |\/| | / /\ \ |  _  /_   | |/ /\ \ | . ` | |  | |\ \/ /   | || |       //
+//  | |  | |/ ____ \| | \ \ |__| / ____ \| |\  | |__| | \  /   _| || |____   //
+//  |_|  |_/_/    \_\_|  \_\____/_/    \_\_| \_|\____/   \/   |_____\_____|  //
+//                                                                           //
+//                          JAN MARJANOVIC, 2014                             //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Output of this module is 0     for input < IN_OFFSET.
+//                          all 1 for input > IN_OFFSET + 2**LUT_B
+//
+// Between this two a natural log is calculated
+//
+// 3101 -> 0
+// 3102 -> 455
+// 3103 -> 721
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module antilog #(
+	parameter IN_B		= 16,
+	parameter OUT_B		= 12,
+	parameter LUT_B		= 9,
+	parameter IN_OFFSET = 3100
+) (
+	//---------- Clock and reset-----------
+	input				clk,
+	input 				reset_n,
+	//---------- Input --------------------
+	input	[IN_B-1:0]	in_data,
+	input				in_valid,
+	//---------- Output -------------------
+	output logic	[OUT_B-1:0]	out_data,
+	output logic		 		out_valid
+);
+
+parameter IN_MAX = IN_OFFSET + 2**LUT_B - 1;
+
+///////////////////////////////////////////////////////////////////////////////
+// LUT
+logic 	[LUT_B-1:0]		addr;
+wire	[OUT_B-1:0]	q;
+
+antilog_lut # (.DATA_WIDTH(OUT_B), .ADDR_WIDTH(LUT_B)) antilog_lut_inst ( .* );
+
+
+///////////////////////////////////////////////////////////////////////////////
+// State machine
+logic [IN_B-1:0] acc;
+
+logic in_lss_offset;
+logic in_grt_max;
+
+enum { IDLE, CHECK, SUBTR, LOOKUP} state;
+
+always_ff @ (posedge clk or negedge reset_n) begin
+	if( !reset_n ) begin
+		state	<= IDLE;
+	end else begin
+		
+		out_valid	<= 0;
+	
+		case(state)
+		//-------------------------------------------------
+		IDLE: begin
+			if(in_valid) begin
+				in_lss_offset	<= in_data < IN_OFFSET;
+				in_grt_max		<= in_data > IN_MAX;
+				state			<= CHECK;
+			end
+		end
+		//-------------------------------------------------
+		CHECK: begin
+			if( in_lss_offset ) begin
+				state		<= IDLE;
+				out_valid	<= 1;
+				out_data	<= 0;			
+			end
+			else if ( in_grt_max ) begin
+				state		<= IDLE;
+				out_valid	<= 1;
+				out_data	<= '1;			
+			end
+			else begin
+				state	<= SUBTR;
+				acc		<= in_data - IN_OFFSET;
+			end
+		end
+		//-------------------------------------------------
+		SUBTR: begin
+			state		<= LOOKUP;
+			addr		<= acc[LUT_B-1:0];
+		end
+		//-------------------------------------------------
+		LOOKUP: begin
+			state		<= IDLE;
+			out_valid	<= 1;
+			out_data	<= q;
+		end
+		//-------------------------------------------------
+		endcase
+	end
+end
+
+endmodule
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+module antilog_lut
+#(parameter DATA_WIDTH=12, parameter ADDR_WIDTH=9)
+(
+	input [(ADDR_WIDTH-1):0] addr,
+	input clk, 
+	output reg [(DATA_WIDTH-1):0] q
+);
+
+	// Declare the ROM variable
+	reg [DATA_WIDTH-1:0] rom[2**ADDR_WIDTH-1:0];
+
+	// Initialize the ROM with $readmemb.  Put the memory contents
+	// in the file single_port_rom_init.txt.  Without this file,
+	// this design will not compile.
+
+	// See Verilog LRM 1364-2001 Section 17.2.8 for details on the
+	// format of this file, or see the "Using $readmemb and $readmemh"
+	// template later in this section.
+
+	initial
+	begin
+		$readmemh("antilog_lut_init.txt", rom);
+	end
+
+	always @ (posedge clk)
+	begin
+		q <= rom[addr];
+	end
+
+endmodule
+
