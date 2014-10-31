@@ -124,21 +124,62 @@ tc_meas # (
 
 //=========================================================
 // Filter
-filter_50 filter_50_inst (
+wire		fifo_empty;
+wire 		fifo_valid;
+wire [13:0] fifo_data;
+
+assign fifo_valid = !fifo_empty;
+
+clk_xing_fifo	clk_xing_fifo_inst (
+	.data ( tc_data ),
+	.rdclk ( clk_50 ),
+	.rdreq ( 1'b1 ),
+	.wrclk ( clk_100 ),
+	.wrreq ( tc_valid ),
+	.q ( fifo_data ),
+	.rdempty ( fifo_empty )
+);
+filter_avg filter_avg_inst (
 	//---------- Clock and reset-----------
-	.clk		( clk_100			),
-	.reset_n
+	.clk		( clk_50			),
+	.reset_n,
 	//---------- Input --------------------
-	.in_data	( {2'd0, tc_data}	),
-	.in_valid	( tc_valid			),
+	.in_data	( {2'd0, fifo_data}	),
+	.in_valid	( fifo_valid		),
 	//---------- Output -------------------
 	.out_data	( filt_data			),
 	.out_valid	( filt_valid		)
 );
 
+/*
+filter_50 filter_50_inst (
+	//---------- Clock and reset-----------
+	.clk		( clk_50			),
+	.reset_n,
+	//---------- Input --------------------
+	.in_data	( {2'd0, fifo_data}	),
+	.in_valid	( fifo_valid		),
+	//---------- Output -------------------
+	.out_data	( filt_data			),
+	.out_valid	( filt_valid		)
+);
+*/
 //=========================================================
 // Tc to Freq converter
 
+antilog  #(
+	.IN_B		( 16		),
+	.OUT_B		( 12		),
+	.LUT_B		( 9			),
+	.IN_OFFSET	( 3100		)
+) antilog_inst ( 
+	.clk		( clk_50		),
+	.reset_n,
+	.in_data	( filt_data 	),
+	.in_valid	( filt_valid 	),
+	.out_data	( 				),
+	.out_valid	( 				)
+);
 /*f_compressor  #   (
 	.F_IN_1			( 1200 			),
 	.F_OUT_1		( 10 			),
