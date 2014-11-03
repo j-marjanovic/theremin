@@ -52,10 +52,10 @@ always @ ( posedge clk or negedge reset_n ) begin
 		phase_acc	<= '{0,0,0,0};
 	end else begin
 		freq_x_3		<= freq_x_2  + freq;
-		phase_acc[0]	<= phase_acc[0] + freq + 1;
-		phase_acc[1]	<= phase_acc[1] + freq_x_2 + 1;	
-		phase_acc[2]	<= phase_acc[2] + freq_x_3 + 1;
-		phase_acc[3]	<= phase_acc[3] + freq_x_4 + 1;	
+		phase_acc[0]	<= phase_acc[0] + freq; // + 1;
+		phase_acc[1]	<= phase_acc[1] + freq_x_2; // + 1;	
+		phase_acc[2]	<= phase_acc[2] + freq_x_3; // + 1;
+		phase_acc[3]	<= phase_acc[3] + freq_x_4; // + 1;	
 	end
 end
 
@@ -64,12 +64,14 @@ end
 // Output sel
 
 logic [SIG_BITS-1:0] sin_signal [0:3];
+logic [SIG_BITS-1:0] q;
+logic [1:0] selector, selector_p;
 
-logic [1:0] selector;
 always @ (posedge clk) begin
 	selector	<= selector + 2'b01;
-	
-	sin_signal[selector] <= LUT_sin[ phase_acc[selector][22:14]  ];
+	selector_p	<= selector;
+	q			<= LUT_sin[ phase_acc[selector][22:14]  ];
+	sin_signal[selector_p]	<= q;	
 end	
 	
 	

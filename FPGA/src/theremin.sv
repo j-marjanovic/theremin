@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //`define DAC_debug
-//`define delay_disable
-`define tone_gen_debug
+`define delay_disable
+//`define tone_gen_debug
 
 module theremin (
 	input 		CLK_50,
@@ -54,6 +54,9 @@ wire				tc_valid;
 
 wire [15:0] filt_data;
 wire		filt_valid;
+
+wire [11:0] log_data;
+wire		log_valid;
 
 localparam	A_BITS 	= 3; 		// Hammond registers
 localparam	TONE_BITS = 16;
@@ -153,41 +156,21 @@ filter_avg filter_avg_inst (
 
 //=========================================================
 // Tc to Freq converter
-
+// With current configuration, this is putting out 0 - ~1000
 antilog  #(
 	.IN_B		( 16		),
 	.OUT_B		( 12		),
 	.LUT_B		( 9			),
-	.IN_OFFSET	( 2400		)
+	.IN_OFFSET	( 2420		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
+	.OUT_OFFS	( 2900		)
 ) antilog_inst ( 
 	.clk		( clk_50		),
 	.reset_n,
 	.in_data	( filt_data 	),
 	.in_valid	( filt_valid 	),
-	.out_data	( 				),
-	.out_valid	( 				)
+	.out_data	( log_data		),
+	.out_valid	( log_valid		)
 );
-/*f_compressor  #   (
-	.F_IN_1			( 1200 			),
-	.F_OUT_1		( 10 			),
-	
-	.F_IN_2			( 2000 			),
-	.F_OUT_2 		( 100  			),
-	
-	.F_IN_3			( 2500 			),
-	.F_OUT_3		( 1250 			)
-)f_compressor_inst (
-	//------------ Clock and reset -----------------
-	.clk			( clk_50 		),
-	.reset_n		( reset_n 		),
-	//------------ Input data ----------------------
-	//.in				( tc_data[15:2] ),
-	.go				( 1 			),
-	//------------ Output data ---------------------
-	.out			( freq 			),
-	.done			(  				)
-);*/
-
 
 //=========================================================
 // Tone generator
@@ -207,7 +190,7 @@ tone_gen # (
 	.a5			( 0			),
 	.a4			( 0			),
 `else
-	.freq		( freq 		),
+	.freq		( {2'd0, log_data[11:2]} ), //<- freq range ([11:2] = normal, [11:6] = bass)
 	//------------ Tone Control -------------
 	.a16		( 15			),
 	.a8			( actrls_a8		),

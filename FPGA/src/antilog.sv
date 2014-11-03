@@ -27,7 +27,8 @@ module antilog #(
 	parameter IN_B		= 16,
 	parameter OUT_B		= 12,
 	parameter LUT_B		= 9,
-	parameter IN_OFFSET = 3100
+	parameter IN_OFFSET = 3100,
+	parameter OUT_OFFS	= 2900
 ) (
 	//---------- Clock and reset-----------
 	input				clk,
@@ -57,7 +58,10 @@ logic [IN_B-1:0] acc;
 logic in_lss_offset;
 logic in_grt_max;
 
-enum { IDLE, CHECK, SUBTR, LOOKUP} state;
+logic out_less_offset;
+logic	[OUT_B-1:0]	out_subtr;
+
+enum { IDLE, CHECK, SUBTR, LOOKUP, OUT_CHECK} state;
 
 always_ff @ (posedge clk or negedge reset_n) begin
 	if( !reset_n ) begin
@@ -94,14 +98,20 @@ always_ff @ (posedge clk or negedge reset_n) begin
 		end
 		//-------------------------------------------------
 		SUBTR: begin
-			state		<= LOOKUP;
+			state		<= OUT_CHECK;
 			addr		<= acc[LUT_B-1:0];
+		end
+		//-------------------------------------------------
+		OUT_CHECK: begin
+			out_less_offset	<= q < OUT_OFFS;
+			out_subtr		<= q - OUT_OFFS;
+			state			<= LOOKUP;
 		end
 		//-------------------------------------------------
 		LOOKUP: begin
 			state		<= IDLE;
 			out_valid	<= 1;
-			out_data	<= q;
+			out_data	<= out_less_offset ? 0 : out_subtr;
 		end
 		//-------------------------------------------------
 		endcase
