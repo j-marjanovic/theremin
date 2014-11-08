@@ -24,7 +24,8 @@ module theremin (
 	input		ANT_IN2,
 	
 	//---------- Controls ----------
-	input		CTRL_RX,	// HDR2_2 on proto1 board
+	input			CTRL_RX_1,	// HDR2_1 on proto1 board
+	input			CTRL_RX_2,	// HDR2_2 on proto1 board
 
 	//---------- SDRAM -------------
 	output			DRAM_CLK,
@@ -61,11 +62,7 @@ wire		log_valid;
 localparam	A_BITS 	= 3; 		// Hammond registers
 localparam	TONE_BITS = 16;
 wire [TC_BITS-1:0] freq;
-(* keep = 1 *) wire [A_BITS-1:0]	a16;
-(* keep = 1 *) wire [A_BITS-1:0]	a8;
-(* keep = 1 *) wire [A_BITS-1:0]	a5;
-(* keep = 1 *) wire [A_BITS-1:0]	a4;
-(* keep = 1 *) wire [TONE_BITS+1:0] tone_out;
+(* keep = 1 *) wire [TONE_BITS+2:0] tone_out;
 
 parameter SIG_BITS	= 16;
 parameter BLEND_B	= 8;	
@@ -76,14 +73,15 @@ wire [SIG_BITS-1:0]	delay_out;
 wire delay_valid;
 `endif
 
-wire [7:0] actrls_a16;
-wire [7:0] actrls_a8;
-wire [7:0] actrls_a5;
-wire [7:0] actrls_a4;
-wire [7:0] actrls_blend;
-wire [7:0] actrls_delay;
-wire [7:0] actrls_feedbk;
-wire [7:0] actrls_gain;
+(* keep = 1 *) wire [7:0] actrls_hamm1;	// 16
+(* keep = 1 *) wire [7:0] actrls_hamm2;	// 5 1/3
+(* keep = 1 *) wire [7:0] actrls_hamm3;	// 8
+(* keep = 1 *) wire [7:0] actrls_hamm4;	// 4
+(* keep = 1 *) wire [7:0] actrls_hamm5;	// 2 2/3
+(* keep = 1 *) wire [7:0] actrls_hamm6;	// 2
+(* keep = 1 *) wire [7:0] actrls_volume;	
+
+
 
 wire 		mem_write;
 wire [31:0]	mem_writedata;
@@ -180,26 +178,19 @@ tone_gen # (
 	.SIG_BITS	( TONE_BITS	)
 ) tone_gen_inst (
 	//------------ Clk and reset ------------
-	.clk		( clk_50 	),
+	.clk		( clk_50 			),
 	.reset_n,
 	//------------ Input --------------------
-`ifdef tone_gen_debug
-	.freq		( {8'd0, actrls_blend}	),
-	.a16		( 15			),
-	.a8			( 0			),
-	.a5			( 0			),
-	.a4			( 0			),
-`else
 	.freq		( {2'd0, log_data[11:2]} ), //<- freq range ([11:2] = normal, [11:6] = bass)
 	//------------ Tone Control -------------
-	.a16		( 15			),
-	.a8			( actrls_a8		),
-	.a5			( actrls_a5		),
-	.a4			( actrls_a4		),
-//TODO: number of bits
-`endif
+	.a16		( actrls_hamm1[7:5]	),
+	.a8			( actrls_hamm3[7:5]	),
+	.a5			( actrls_hamm2[7:5]	),
+	.a4			( actrls_hamm4[7:5]	),
+	.a2_23		( actrls_hamm5[7:5]	),
+	.a2			( actrls_hamm6[7:5]	),
 	//------------ Output control ------------------
-	.out		( tone_out 	)
+	.out		( tone_out 			)
 );
 
 //=========================================================
@@ -216,7 +207,7 @@ always_ff @ (posedge clk_50) begin
 	sampling_prescaler	<= sampling_prescaler + 1;
 	
 	if(sampling_prescaler	== 50_000_000/48_000) begin
-		delay_out			<= tone_out[SIG_BITS+1:2];
+		delay_out			<= tone_out[SIG_BITS+2:3];
 		sampling_prescaler	<= 0;
 		delay_valid			<= 1;
 	end
@@ -233,7 +224,7 @@ delay #(
 ) delay_inst ( 	
 	.clk			( clk_50		),
 	.reset_n,
-	.in				( tone_out		),
+	.in				( tone_out[SIG_BITS+2:3]		),
 	.valid			( delay_valid	),
 	.out			( delay_out		),
 	.blend			( actrls_a8 	),
@@ -300,25 +291,32 @@ AD5660_SPI # (
 	
 //=========================================================
 // Analog controls
-a_ctrls # (
-	.BITS(8)
-) a_ctrls_inst(
+a_ctrls a_ctrls_0(
 	//------------ Clk and reset ------------
-	.clk		( clk_50	),
+	.clk		( clk_50			),
 	.reset_n,
 	//------------ Input --------------------
-	.CTRL_RX,
-	//------------ Tone Control -------------
-	.a8			( actrls_a8 	),
-	.a5			( actrls_a5 	),
-	.a4			( actrls_a4 	),
-	//------------ Delay Control ------------
-	.blend		( actrls_blend 	),
-	.delay		( actrls_delay 	),
-	.feedbk		( actrls_feedbk ),
-	//------------ Gain Control -------------
-	.gain		( actrls_gain 	)
+	.CTRL_RX	( CTRL_RX_1			),
+	//------------ Output Control -----------
+	.out		(	)
 );
+
+a_ctrls a_ctrls_1(
+	//------------ Clk and reset ------------
+	.clk		( clk_50			),
+	.reset_n,
+	//------------ Input --------------------
+	.CTRL_RX	( CTRL_RX_2			),
+	//------------ Output Control -----------
+	.out		('{	actrls_hamm1,
+					actrls_hamm2,
+					actrls_hamm3,
+					actrls_hamm4,
+					actrls_hamm5,
+					actrls_hamm6,
+					actrls_volume}	)
+);
+
 
 //=========================================================
 // Memory controller

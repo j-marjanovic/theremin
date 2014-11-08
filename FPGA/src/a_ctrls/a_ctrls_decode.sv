@@ -19,7 +19,7 @@ module a_ctrls_decode (
 	input [7:0] 		data_in,
 	input				data_valid,
 	//------------ Decoded values ---------------
-	output logic [0:6][7:0] values 
+	output logic [7:0] 	values [0:6]
 );
 
 //===================================================================

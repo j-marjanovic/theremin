@@ -13,25 +13,16 @@
 `define debug_ON
 
 module a_ctrls # (
-	fCLK	= 50_000_000,
-	fBAUD	= 9_600,
-	BITS	= 8
+	parameter fCLK	= 50_000_000,
+	parameter fBAUD	= 9_600
 )(
 	//------------ Clk and reset ------------
-	input 					clk,
-	input					reset_n,
+	input 			clk,
+	input			reset_n,
 	//------------ Input --------------------
-	input					CTRL_RX,
-	//------------ Tone Control -------------
-	output  [BITS-1:0]	a8,
-	output  [BITS-1:0]	a5,
-	output  [BITS-1:0]	a4,
-	//------------ Delay Control ------------
-	output  [BITS-1:0]	blend,
-	output  [BITS-1:0]	delay,
-	output  [BITS-1:0]	feedbk,
-	//------------ Gain Control -------------
-	output  [BITS-1:0]	gain	
+	input			CTRL_RX,
+	//------------ Output Control -----------
+	output  [7:0] 	out [0:6]	
 );
 
 
@@ -75,9 +66,6 @@ end
 //                       DECODE
 //=========================================================
 
-wire [55:0] connect;
-assign { blend, gain, a8, a5, a4, delay,feedbk } = connect;
-
 a_ctrls_decode a_ctrls_decode_inst(
 	// Clk and reset
 	.clk		( clk 		),
@@ -86,7 +74,7 @@ a_ctrls_decode a_ctrls_decode_inst(
 	.data_in	( rxd		),
 	.data_valid	( rxd_valid	),
 	// Decoded values
-	.values 	( connect	)
+	.values 	( out	)
 );
 
 endmodule
