@@ -41,7 +41,7 @@ module antilog #(
 	output logic		 		out_valid
 );
 
-localparam IN_MAX = IN_OFFSET + 2**LUT_B - 1;
+parameter IN_MAX = IN_OFFSET + 2**LUT_B - 1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // LUT

@@ -73,6 +73,10 @@ wire [SIG_BITS-1:0]	delay_out;
 wire delay_valid;
 `endif
 
+wire [7:0] 	actrls1_out [0:6];
+wire [7:0] actrl_freq;
+assign actrl_freq = actrls1_out[5];
+
 (* keep = 1 *) wire [7:0] actrls_hamm1;	// 16
 (* keep = 1 *) wire [7:0] actrls_hamm2;	// 5 1/3
 (* keep = 1 *) wire [7:0] actrls_hamm3;	// 8
@@ -159,7 +163,7 @@ antilog  #(
 	.IN_B		( 16		),
 	.OUT_B		( 12		),
 	.LUT_B		( 9			),
-	.IN_OFFSET	( 2420		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
+	.IN_OFFSET	( 2430		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
 	.OUT_OFFS	( 2900		)
 ) antilog_inst ( 
 	.clk		( clk_50		),
@@ -172,16 +176,30 @@ antilog  #(
 
 //=========================================================
 // Tone generator
+//<- freq range ([11:2] = normal, [11:6] = bass)
+logic [TC_BITS-1:0] gen_freq;
+
+always_ff @ (clk_50) begin
+	case(actrl_freq[7:5])
+	3'd0:	gen_freq <= { 7'd0, log_data[11:7]};
+	3'd1:	gen_freq <= { 6'd0, log_data[11:6]};
+	3'd2:	gen_freq <= { 5'd0, log_data[11:5]};
+	3'd3:	gen_freq <= { 4'd0, log_data[11:4]};
+	3'd4:	gen_freq <= { 3'd0, log_data[11:3]};
+	default:gen_freq <= { 2'd0, log_data[11:2]};
+	endcase
+end
+  
 tone_gen # (
-	.F_BITS		( TC_BITS 	),
-	.A_BITS		( A_BITS 	),
-	.SIG_BITS	( TONE_BITS	)
+	.F_BITS		( TC_BITS 			),
+	.A_BITS		( A_BITS 			),
+	.SIG_BITS	( TONE_BITS			)
 ) tone_gen_inst (
 	//------------ Clk and reset ------------
 	.clk		( clk_50 			),
 	.reset_n,
 	//------------ Input --------------------
-	.freq		( {2'd0, log_data[11:2]} ), //<- freq range ([11:2] = normal, [11:6] = bass)
+	.freq		( gen_freq			), 
 	//------------ Tone Control -------------
 	.a16		( actrls_hamm1[7:5]	),
 	.a8			( actrls_hamm3[7:5]	),
@@ -298,7 +316,7 @@ a_ctrls a_ctrls_0(
 	//------------ Input --------------------
 	.CTRL_RX	( CTRL_RX_1			),
 	//------------ Output Control -----------
-	.out		(	)
+	.out		( actrls1_out	)
 );
 
 a_ctrls a_ctrls_1(
@@ -308,12 +326,12 @@ a_ctrls a_ctrls_1(
 	//------------ Input --------------------
 	.CTRL_RX	( CTRL_RX_2			),
 	//------------ Output Control -----------
-	.out		('{	actrls_hamm1,
-					actrls_hamm2,
-					actrls_hamm3,
-					actrls_hamm4,
+	.out		('{	actrls_hamm6,
 					actrls_hamm5,
-					actrls_hamm6,
+					actrls_hamm4,
+					actrls_hamm3,
+					actrls_hamm2,
+					actrls_hamm1,
 					actrls_volume}	)
 );
 
