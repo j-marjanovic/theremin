@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //`define DAC_debug
-`define delay_disable
+//`define delay_disable
 //`define tone_gen_debug
 
 module theremin (
@@ -75,7 +75,15 @@ wire delay_valid;
 
 wire [7:0] 	actrls1_out [0:6];
 wire [7:0] actrl_freq;
-assign actrl_freq = actrls1_out[5];
+wire [7:0] actrl_blend;
+wire [7:0] actrl_fdbk;
+wire [18:0] actrl_delay;
+// actrls1_out[0]
+assign actrl_delay = {2'd0, actrls1_out[1], 8'd0, 1'd0};
+assign actrl_fdbk  = actrls1_out[2];
+assign actrl_blend = actrls1_out[3];
+assign actrl_freq  = actrls1_out[4];
+// 5 = reserved for parameters
 
 (* keep = 1 *) wire [7:0] actrls_hamm1;	// 16
 (* keep = 1 *) wire [7:0] actrls_hamm2;	// 5 1/3
@@ -163,7 +171,7 @@ antilog  #(
 	.IN_B		( 16		),
 	.OUT_B		( 12		),
 	.LUT_B		( 9			),
-	.IN_OFFSET	( 2430		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
+	.IN_OFFSET	( 2200		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
 	.OUT_OFFS	( 2900		)
 ) antilog_inst ( 
 	.clk		( clk_50		),
@@ -186,7 +194,9 @@ always_ff @ (clk_50) begin
 	3'd2:	gen_freq <= { 5'd0, log_data[11:5]};
 	3'd3:	gen_freq <= { 4'd0, log_data[11:4]};
 	3'd4:	gen_freq <= { 3'd0, log_data[11:3]};
-	default:gen_freq <= { 2'd0, log_data[11:2]};
+	3'd5:	gen_freq <= { 2'd0, log_data[11:2]};
+	3'd6:	gen_freq <= { 1'd0, log_data[11:1]};
+	3'd7:	gen_freq <= {       log_data[11:0]};
 	endcase
 end
   
@@ -237,21 +247,17 @@ delay #(
 	.BLEND_B		( BLEND_B		),
 	.DLY_B			( DLY_B			),
 	.FDB_B			( FDB_B			),
-	.fSAMP			( 192_000		),
+	.fSAMP			( 96_000		),
 	.ADDR_W			( 19			)
 ) delay_inst ( 	
 	.clk			( clk_50		),
 	.reset_n,
-	.in				( tone_out[SIG_BITS+2:3]		),
+	.in				( tone_out[SIG_BITS+2:3]	),
 	.valid			( delay_valid	),
 	.out			( delay_out		),
-	.blend			( actrls_a8 	),
-	.delay			( {2'd0, actrls_a5, 8'd0, 1'd0} 	),
-	.feedbk			( actrls_a4		),
-/*
-	.blend			( actrls_blend 	),
-	.delay			( actrls_delay 	),
-	.feedbk			( actrls_feedbk ),*/
+	.blend			( actrl_blend 	),
+	.delay			( actrl_delay 	),
+	.feedbk			( actrl_fdbk	),
 	.mem_write      ( mem_write		),
 	.mem_writedata  ( mem_writedata	),
 	.mem_writeaddr  ( mem_writeaddr	),
@@ -338,7 +344,7 @@ a_ctrls a_ctrls_1(
 
 //=========================================================
 // Memory controller
-/*
+
 mem_controller mem_controller_inst (
 	.clk_clk        ( clk_50			),		//      clk.clk
 	.clk_100_clk	( clk_100			),		//  clk_100.clk
@@ -362,6 +368,6 @@ mem_controller mem_controller_inst (
 	.s2a_readaddr   ( mem_readaddr		),		//         .readaddr
 	.s2a_readdone   ( mem_readdone		)		//         .readdone
 );
-*/
+
 
 endmodule
