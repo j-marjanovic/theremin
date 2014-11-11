@@ -54,26 +54,30 @@ dist = []
 for filename in files:
     dist.append( filename.split('_')[1].replace('.csv','') )
     x = parse_file(filename)
-    x = np.array(x)
+    x = np.array(x, dtype='float64')
     x /= 100e6/1e6
+    print(len(x))
     timeMean.append( np.mean(x) )
     timeStdP.append( np.mean(x) + np.std(x))
     timeStdN.append( np.mean(x) - np.std(x))
     timeMin.append( np.min(x) )
     timeMax.append( np.max(x) )
 
+plt.figure(figsize=(16,9))
 
 plt.plot(dist, timeMean, 'o')
-plt.plot(dist, timeStdN, 'g')    
-plt.plot(dist, timeStdP, 'g')  
-plt.plot(dist, timeMin, 'k--')  
-plt.plot(dist, timeMax, 'k--')  
+plt.plot(dist, timeStdN, 'g', linewidth=2.0)    
+plt.plot(dist, timeStdP, 'g', linewidth=2.0)    
+plt.plot(dist, timeMin, 'k--', linewidth=2.0)     
+plt.plot(dist, timeMax, 'k--', linewidth=2.0) 
 
 
 plt.grid('on')
 plt.xlabel('Distance hand-antenna [cm]')
 plt.ylabel('Time constant [us]')
+plt.title('Antenna response without filtering')
 
+plt.savefig("../theremin_antenna_direct.png")
 
 
 

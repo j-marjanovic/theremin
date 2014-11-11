@@ -27,12 +27,14 @@ module antilog #(
 	parameter IN_B		= 16,
 	parameter OUT_B		= 12,
 	parameter LUT_B		= 9,
-	parameter IN_OFFSET = 3100,
+	//parameter IN_OFFSET = 3100,
 	parameter OUT_OFFS	= 2900
 ) (
 	//---------- Clock and reset-----------
 	input				clk,
 	input 				reset_n,
+	//---------- Control ------------------
+	input	[IN_B-1:0]	in_offset,
 	//---------- Input --------------------
 	input	[IN_B-1:0]	in_data,
 	input				in_valid,
@@ -41,7 +43,11 @@ module antilog #(
 	output logic		 		out_valid
 );
 
-parameter IN_MAX = IN_OFFSET + 2**LUT_B - 1;
+//parameter IN_MAX = IN_OFFSET + 2**LUT_B - 1;
+logic	[IN_B-1:0]	in_max;
+always_ff @ (posedge clk) begin
+	in_max	<= in_offset + (2**LUT_B - 1);
+end
 
 ///////////////////////////////////////////////////////////////////////////////
 // LUT
@@ -74,8 +80,8 @@ always_ff @ (posedge clk or negedge reset_n) begin
 		//-------------------------------------------------
 		IDLE: begin
 			if(in_valid) begin
-				in_lss_offset	<= in_data < IN_OFFSET;
-				in_grt_max		<= in_data > IN_MAX;
+				in_lss_offset	<= in_data < in_offset;
+				in_grt_max		<= in_data > in_max;
 				state			<= CHECK;
 			end
 		end
@@ -93,7 +99,7 @@ always_ff @ (posedge clk or negedge reset_n) begin
 			end
 			else begin
 				state	<= SUBTR;
-				acc		<= in_data - IN_OFFSET;
+				acc		<= in_data - in_offset;
 			end
 		end
 		//-------------------------------------------------

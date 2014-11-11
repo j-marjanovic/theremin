@@ -78,12 +78,13 @@ wire [7:0] actrl_freq;
 wire [7:0] actrl_blend;
 wire [7:0] actrl_fdbk;
 wire [18:0] actrl_delay;
+wire [7:0] actrl_log;
 // actrls1_out[0]
 assign actrl_delay = {2'd0, actrls1_out[1], 8'd0, 1'd0};
 assign actrl_fdbk  = actrls1_out[2];
 assign actrl_blend = actrls1_out[3];
 assign actrl_freq  = actrls1_out[4];
-// 5 = reserved for parameters
+assign actrl_log   = actrls1_out[5];
 
 (* keep = 1 *) wire [7:0] actrls_hamm1;	// 16
 (* keep = 1 *) wire [7:0] actrls_hamm2;	// 5 1/3
@@ -167,15 +168,22 @@ filter_avg filter_avg_inst (
 //=========================================================
 // Tc to Freq converter
 // With current configuration, this is putting out 0 - ~1000
+
+logic [15:0] in_offset;
+always_ff @ (posedge clk_50) begin
+	in_offset	<= 1600 + {actrl_log, 2'd0};
+end
+
 antilog  #(
 	.IN_B		( 16		),
 	.OUT_B		( 12		),
 	.LUT_B		( 9			),
-	.IN_OFFSET	( 2200		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
+	//.IN_OFFSET	( 2200		), // <- sensitivity (2400 -> wobl wobl, 2420 -> ok)
 	.OUT_OFFS	( 2900		)
 ) antilog_inst ( 
 	.clk		( clk_50		),
 	.reset_n,
+	.in_offset	( in_offset		),
 	.in_data	( filt_data 	),
 	.in_valid	( filt_valid 	),
 	.out_data	( log_data		),
@@ -270,6 +278,27 @@ delay #(
 `endif
 
 //=========================================================
+// Volume
+logic [SIG_BITS-1:0] 	volumed_data;
+wire [SIG_BITS-1:0] 	vol_mix_wire;
+logic					volumed_valid;
+
+mixer #(
+	.D_WIDTH 	( SIG_BITS 	),
+	.M_WIDTH 	( 8		  	)
+) mixer_volume (
+	.a		( delay_out		),
+	.b		( '0 			),
+	.mix	( actrls_volume	) ,
+	.out	( vol_mix_wire  )
+);
+
+always_ff @ (posedge clk_50) begin
+	volumed_valid	<= delay_valid;
+	volumed_data	<= vol_mix_wire;
+end
+
+//=========================================================
 // Output
 `ifdef DAC_debug
 logic [15:0]	DAC_dbg_out;
@@ -303,8 +332,8 @@ AD5660_SPI # (
 	.in		( {2'd0, DAC_dbg_out, 6'd0} ),
 	.go		( DAC_dbg_valid	),
 `else
-	.in		( {2'd0, delay_out, 6'd0} 	),
-	.go		( delay_valid				),
+	.in		( {2'd0, volumed_data, 6'd0} 	),
+	.go		( volumed_valid				),
 `endif
 	//------------ Output -------------------
 	.SS_n	( DAC_SYNC_n				),
