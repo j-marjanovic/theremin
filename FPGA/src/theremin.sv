@@ -15,13 +15,13 @@
 //`define tone_gen_debug
 
 module theremin (
-	input 		CLK_50,
-	input 		EXT_RESET_n,
+	input 			CLK_50,
+	input 			EXT_RESET_n,
 	
 	//---------- Antenna -----------
-	output		ANT_OUT,
-	input		ANT_IN,
-	input		ANT_IN2,
+	output			ANT_OUT,
+	input			ANT_IN,
+	input			ANT_IN2,
 	
 	//---------- Controls ----------
 	input			CTRL_RX_1,	// HDR2_1 on proto1 board
@@ -40,9 +40,13 @@ module theremin (
 	inout 	[15:0]	DRAM_DATA,
 	
 	//---------- DAC ---------------
-	output		DAC_SYNC_n,
-	output		DAC_DATAI,
-	output		DAC_SCLK
+	output			DAC_SYNC_n,
+	output			DAC_DATAI,
+	output			DAC_SCLK,
+	
+	//---------- DAC ---------------
+	output			LED_YE,
+	output			LED_RD
 );
 
 wire clk_100;
@@ -103,6 +107,20 @@ wire 		mem_read;
 wire [31:0]	mem_readdata;
 wire [18:0]	mem_readaddr;
 wire 		mem_readdone;
+
+logic [31:0] counter;
+logic led;
+always_ff @ (posedge clk_50) begin
+	if(counter >= 5_000_000) begin
+		led	<= ! led;
+		counter	<= 0;
+	end else begin
+		counter <= counter + 1;
+	end
+end
+
+assign LED_YE = !(log_data == 12'h000);
+assign LED_RD = !(log_data == 12'hFFF);
 
 //=========================================================
 // PLL 100 MHz
